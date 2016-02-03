@@ -126,9 +126,30 @@ def count_entries(table):
 	row_count = c.fetchone()[0]
 	return row_count
 
-#find entries for today
+
 
 def find_entries():
+	target = int(8)
+	while target != 9:
+		target = int(input("\nSelect Option:\n 1.Search By Date \
+			\n 2.Search description\n 9.Back \n\n User: " ))
+		if target == 1:
+			search_date()
+		if target == 2:
+			search_description()
+
+def print_results(result_ids):
+	id_list = [int(i[0]) for i in result_ids]
+	if len(id_list) == 0:
+		print('no results for your parameters')
+	else:
+		for x in range(len(id_list)):
+			row = id_list[x]
+			c.execute('''SELECT id, date_time, foo, description FROM ship WHERE
+				id = ?''',(row,))
+			print(c.fetchone())
+
+def search_date():
 	now = datetime.now()
 	result_ids = []
 	print("Enter Beginning Date")
@@ -140,20 +161,20 @@ def find_entries():
 	beg_date_time = datetime(beg_year, beg_month, beg_day, beg_hour, beg_minute)
 	end_date_time = datetime(end_year, end_month, end_day, end_hour, end_minute)
 
-	c.execute('''SELECT id FROM ship WHERE date_time BETWEEN ? AND ?'''
+	c.execute('''SELECT id FROM ship WHERE date_time BETWEEN ? AND ? ORDER BY date_time'''
 		,(beg_date_time, end_date_time,))
 	result_ids = c.fetchall()
-	id_list = [int(i[0]) for i in result_ids]
-	if len(id_list) == 0:
-		print('no results for your parameters')
-	else:
-		for x in range(len(id_list)):
-			row = id_list[x]
-			c.execute('''SELECT id, date_time, foo, description FROM ship WHERE
-				id = ?''',(row,))
-			print(c.fetchone())
+	print_results(result_ids)
 
-				
+def search_description():
+	result_ids = []
+	search_phrase = input("Search for: ")
+	c.execute('''SELECT id FROM ship WHERE description LIKE ? ORDER BY date_time'''
+		,('%'+search_phrase+'%',))
+	result_ids = c.fetchall()
+	print_results(result_ids)
+
+
 
 
 #USER INTERFACE
@@ -162,7 +183,7 @@ target = int(8)
 while target != 9:
 	target = int(input("\nSelect Option:\n 1.Add Shipping Entry \
 			\n 2.Print Shipping Schedule \n 3.Delete Shipping Entry \
-			\n 4.Search Date \n 9.Exit \n\n User: " ))
+			\n 4.Search Entries \n 9.Exit \n\n User: " ))
 	if target == 1:
 		add_ship_entry()
 	elif target == 2:
